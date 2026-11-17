@@ -79,7 +79,7 @@ from sympy.simplify.fu import sincos_to_sum
 from sympy.simplify.powsimp import powsimp
 from sympy.strategies.core import switch, do_one, null_safe, condition
 from sympy.utilities.iterables import iterable
-from sympy.utilities.misc import debug
+from sympy.utilities.misc import debug, debugf
 
 if TYPE_CHECKING:
     from sympy.core.expr import Expr
@@ -1861,7 +1861,8 @@ def parts_rule(integral):
     steps = []
     if result:
         u, dv, v, du, v_step = result
-        debug("u : {}, dv : {}, v : {}, du : {}, v_step: {}".format(u, dv, v, du, v_step))
+        debugf("u : %s, dv : %s, v : %s, du : %s, v_step: %s",
+               (u, dv, v, du, v_step))
         steps.append(result)
 
         if isinstance(v, Integral):
@@ -1887,7 +1888,8 @@ def parts_rule(integral):
         for _ in range(4):
             if dv == 1:
                 break
-            debug("Cyclic integration {} with v: {}, du: {}, integrand: {}".format(_, v, du, integrand))
+            debugf("Cyclic integration %s with v: %s, du: %s, integrand: %s",
+                   (_, v, du, integrand))
             coefficient = ((v * du) / integrand).cancel()
             if coefficient == 1:
                 break
