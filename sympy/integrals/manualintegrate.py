@@ -1238,7 +1238,8 @@ def find_substitutions(integrand, symbol, u_var):
         if u_diff == 0:
             return False
         substituted = integrand / u_diff
-        debug("substituted: {}, u: {}, u_var: {}".format(substituted, u, u_var))
+        debugf("substituted: %s, u: %s, u_var: %s",
+               (substituted, u, u_var))
         substituted = manual_subs(substituted, u, u_var).cancel()
 
         # if the term is linear, then we can solve for u in terms of the symbol
@@ -1338,7 +1339,8 @@ def rewriter(condition, rewrite):
     """Strategy that rewrites an integrand."""
     def _rewriter(integral):
         integrand, symbol = integral
-        debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewrite, symbol))
+        debugf("Integral: %s is rewritten with %s on symbol: %s",
+               (integrand, rewrite, symbol))
         if condition(*integral):
             rewritten = rewrite(*integral)
             if rewritten != integrand:
@@ -1352,7 +1354,8 @@ def proxy_rewriter(condition, rewrite):
     def _proxy_rewriter(criteria):
         criteria, integral = criteria
         integrand, symbol = integral
-        debug("Integral: {} is rewritten with {} on symbol: {} and criteria: {}".format(integrand, rewrite, symbol, criteria))
+        debugf("Integral: %s is rewritten with %s on symbol: %s and criteria: %s",
+               (integrand, rewrite, symbol, criteria))
         args = criteria + list(integral)
         if condition(*args):
             rewritten = rewrite(*args)
@@ -1378,7 +1381,7 @@ def alternatives(*rules, branch=False):
         for rule in rules:
             count = count + 1
             if branch:
-                debug("Rule {}: {}".format(count, rule))
+                debugf("Rule %s: %s", (count, rule))
 
             result = rule(integral)
             if (not result or isinstance(result, DontKnowRule) or
@@ -2071,7 +2074,8 @@ def trig_cmplx_exp_rule(integral: IntegralInfo):
     rewritten = integrand.rewrite(primary_trighyper_functions, exp)
 
     if rewritten != integrand:
-        debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewritten, symbol))
+        debugf("Integral: %s is rewritten with %s on symbol: %s",
+               (integrand, rewritten, symbol))
         steps = yield IntegralInfo(rewritten, symbol)
         return RewriteRule(integrand, symbol, rewritten, steps)
 
@@ -2696,7 +2700,8 @@ def sqrt_fractional_linear_rule(integral : IntegralInfo):
     if base0 is None:
         substep = yield IntegralInfo(integrand, x)
         if not substep.contains_dont_know():
-            debug("Integral: {} is rewritten with {} on symbol: {}".format(integral.integrand, integrand, x))
+            debugf("Integral: %s is rewritten with %s on symbol: %s",
+                   (integral.integrand, integrand, x))
             return RewriteRule(integral.integrand, x, integrand, substep)
         return None
     q0: Integer = lcm_list([exp_i.q for exp_i in exps])
@@ -2737,7 +2742,8 @@ def sqrt_fractional_linear_rule(integral : IntegralInfo):
             pieces.append((step, S.true))
             step = PiecewiseRule(integrand, x, pieces)
         if constant_bases_subs:
-            debug("Integral: {} is rewritten with {} on symbol: {}".format(integral.integrand, integrand, x))
+            debugf("Integral: %s is rewritten with %s on symbol: %s",
+                   (integral.integrand, integrand, x))
             return RewriteRule(integral.integrand, x, integrand, step)
         return step
     return None
@@ -2992,7 +2998,8 @@ def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
                 ]
             )
 
-        debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewrite_expr, x))
+        debugf("Integral: %s is rewritten with %s on symbol: %s",
+               (integrand, rewrite_expr, x))
         nondegenerate_step = RewriteRule(integrand, x, rewrite_expr, substep)
         if delta.is_zero is None:
             return _add_degenerate_step(
@@ -3040,7 +3047,8 @@ def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
                 terms.append(term)
                 steps.append(const_step)
         rewritten = Add(*terms, evaluate=False)
-        debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewritten, x))
+        debugf("Integral: %s is rewritten with %s on symbol: %s",
+               (integrand, rewritten, x))
         if len(steps) == 1:
             substep = steps[0]
         else:
@@ -3051,7 +3059,8 @@ def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
         numer_poly = f_poly * (a+b*x+c*x**2)**((n+1)/2)
         rewritten = numer_poly.as_expr()/sqrt(a+b*x+c*x**2)
         substep = yield from sqrt_quadratic_denom_rule(numer_poly, rewritten)
-        debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewritten, x))
+        debugf("Integral: %s is rewritten with %s on symbol: %s",
+               (integrand, rewritten, x))
         generic_step = RewriteRule(integrand, x, rewritten, substep)
     elif n == -1:
         generic_step = yield from sqrt_quadratic_denom_rule(f_poly, integrand)
@@ -3198,23 +3207,27 @@ def hyperbolic_rule(integral: tuple[Expr, Symbol]):
         u = Dummy('u')
         if integrand.func == tanh:
             rewritten = sinh(symbol)/cosh(symbol)
-            debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewritten, symbol))
+            debugf("Integral: %s is rewritten with %s on symbol: %s",
+                   (integrand, rewritten, symbol))
             return RewriteRule(integrand, symbol, rewritten,
                    URule(rewritten, symbol, u, cosh(symbol), ReciprocalRule(1/u, u, u)))
         if integrand.func == coth:
             rewritten = cosh(symbol)/sinh(symbol)
-            debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewritten, symbol))
+            debugf("Integral: %s is rewritten with %s on symbol: %s",
+                   (integrand, rewritten, symbol))
             return RewriteRule(integrand, symbol, rewritten,
                    URule(rewritten, symbol, u, sinh(symbol), ReciprocalRule(1/u, u, u)))
         else:
             rewritten = integrand.rewrite(tanh)
-            debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewritten, symbol))
+            debugf("Integral: %s is rewritten with %s on symbol: %s",
+                   (integrand, rewritten, symbol))
             if integrand.func == sech:
                 return RewriteRule(integrand, symbol, rewritten,
                        URule(rewritten, symbol, u, tanh(symbol/2),
                        ArctanRule(2/(u**2 + 1), u, S(2), S.One, S.One)))
             if integrand.func == csch:
-                debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewritten, symbol))
+                debugf("Integral: %s is rewritten with %s on symbol: %s",
+                       (integrand, rewritten, symbol))
                 return RewriteRule(integrand, symbol, rewritten,
                        URule(rewritten, symbol, u, tanh(symbol/2),
                        ReciprocalRule(1/u, u, u)))
@@ -3273,8 +3286,8 @@ def _trig_substitution_rule(integral, rewritten, coefficient, u_var, u_func,
     substep = yield IntegralInfo(substituted, u_var)
     generic_step = URule(rewritten, symbol, u_var, u_func, substep)
     if rewritten != integrand:
-        debug("Integral: {} is rewritten with {} on symbol: {}".format(
-            integrand, rewritten, symbol))
+        debugf("Integral: %s is rewritten with %s on symbol: %s",
+               (integrand, rewritten, symbol))
         generic_step = RewriteRule(
             integrand, symbol, rewritten, generic_step)
     return _add_trig_degenerate_step(integral, coefficient, generic_step)
@@ -3314,8 +3327,8 @@ def sincos_product_to_sum(integral):
     integrand, symbol = integral
     rewritten = sincos_to_sum(integrand)
     if rewritten != integrand:
-        debug("Integral: {} is rewritten with {} on symbol: {}".format(
-            integrand, rewritten, symbol))
+        debugf("Integral: %s is rewritten with %s on symbol: %s",
+               (integrand, rewritten, symbol))
         substep = yield IntegralInfo(rewritten, symbol)
         return RewriteRule(integrand, symbol, rewritten, substep)
 
@@ -3636,7 +3649,7 @@ def substitution_rule(integral):
             subrule = yield IntegralInfo(substituted, u_var)
             count = count + 1
             if branch:
-                debug("Rule {}: {}".format(count, subrule))
+                debugf("Rule %s: %s", (count, subrule))
 
             if subrule.contains_dont_know():
                 continue
@@ -3656,7 +3669,8 @@ def substitution_rule(integral):
                             # additional check not to replace a if it is not valid (for example ln(a*x))
                             if rewritten_integral.has(S.ComplexInfinity, S.Infinity, S.NegativeInfinity, S.NaN):
                                 continue
-                            debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewritten_integral, symbol))
+                            debugf("Integral: %s is rewritten with %s on symbol: %s",
+                                   (integrand, rewritten_integral, symbol))
                             substep = yield IntegralInfo(rewritten_integral, symbol)
 
                             if substep:
@@ -3735,7 +3749,8 @@ def rewrites_rule(integral):
 
     if integrand.match(1/cos(symbol)):
         rewritten = integrand.subs(1/cos(symbol), sec(symbol))
-        debug("Integral: {} is rewritten with {} on symbol: {}".format(integrand, rewritten, symbol))
+        debugf("Integral: %s is rewritten with %s on symbol: %s",
+               (integrand, rewritten, symbol))
         substep = yield IntegralInfo(rewritten, symbol)
         return RewriteRule(integrand, symbol, rewritten, substep)
 
